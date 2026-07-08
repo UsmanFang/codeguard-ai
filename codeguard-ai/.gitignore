@@ -1,0 +1,16 @@
+# Project Specific Target Build Binaries Artifacts 
+target/
+*.class
+*.log
+
+# Sensitive Identity Signature Strings Configuration Storage File Toggles
+.env
+.env.local
+
+# Local scan history is per-machine runtime data, not part of the app
+scan_history.json
+
+# IDE Environment Metadata Arrays Layout Maps
+.idea/
+*.iml
+.DS_Store
