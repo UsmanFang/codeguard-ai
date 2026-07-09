@@ -45,6 +45,7 @@ public class MainView extends BorderPane {
         applicationStatusBar = new StatusBar();
         
         splitWorkspaceLayout = new WorkspaceSplitPane();
+        splitWorkspaceLayout.getReportPanel().setSaveAction(this::handleSaveFile);
         workspaceStatsSummary = new StatsSummaryBar();
         
         ControlBar workspaceControlToolbar = new ControlBar(

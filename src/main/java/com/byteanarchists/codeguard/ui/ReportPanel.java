@@ -9,11 +9,13 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import java.util.List;
+import com.byteanarchists.codeguard.util.SettingsStore;
 
 public class ReportPanel extends StackPane {
     private final VBox contentBox;
     private final ScrollPane scrollWrapper;
     private final CodeEditorPanel editorPanel;
+    private Runnable saveAction; // <-- new field
 
     public ReportPanel(CodeEditorPanel editorPanel) {
         this.editorPanel = editorPanel;
@@ -27,13 +29,17 @@ public class ReportPanel extends StackPane {
         scrollWrapper.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
 
         getChildren().add(scrollWrapper);
-        renderFindings(List.of()); // Forces initial operational Empty State trigger layout
+        renderFindings(List.of());
+    }
+
+    // <-- new setter
+    public void setSaveAction(Runnable saveAction) {
+        this.saveAction = saveAction;
     }
 
     public void renderFindings(List<Finding> findings) {
         contentBox.getChildren().clear();
 
-        // Implementing Review Critique Point: Mid-workspace Active Placeholder State
         if (findings == null || findings.isEmpty()) {
             StackPane basePlaceholder = new StackPane();
             basePlaceholder.setPadding(new Insets(60, 20, 60, 20));
@@ -45,7 +51,9 @@ public class ReportPanel extends StackPane {
             contentBox.getChildren().add(basePlaceholder);
         } else {
             for (Finding finding : findings) {
-                contentBox.getChildren().add(new FindingCard(finding, editorPanel));
+                FindingCard card = new FindingCard(finding, editorPanel);
+                card.setSaveAction(saveAction); // <-- pass the save action down
+                contentBox.getChildren().add(card);
             }
         }
     }

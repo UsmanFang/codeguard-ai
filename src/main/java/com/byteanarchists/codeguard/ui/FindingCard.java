@@ -1,7 +1,8 @@
-//reusable card, now with Copy fix + Dismiss
+// reusable card, now with Copy fix + Dismiss + Auto‑save
 package com.byteanarchists.codeguard.ui;
 
 import com.byteanarchists.codeguard.api.model.Finding;
+import com.byteanarchists.codeguard.util.SettingsStore;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -11,7 +12,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+
 public class FindingCard extends VBox {
+    private Runnable saveAction; // <-- new field
 
     public FindingCard(Finding finding, CodeEditorPanel editorPanel) {
         getStyleClass().add("bordered-card");
@@ -50,9 +53,15 @@ public class FindingCard extends VBox {
             Button copyBtn = new Button("Apply Patch");
             copyBtn.setStyle("-fx-background-color: #44475a; -fx-text-fill: #f8f8f2;");
             copyBtn.setOnAction(e -> {
+                // Apply the fix
                 editorPanel.applyFixAtLine(finding.getLineNumber(), finding.getFixSnippet());
                 copyBtn.setText("Applied ✓");
                 copyBtn.setDisable(true);
+
+                // Auto‑save if enabled
+                if (SettingsStore.isAutoSaveEnabled() && saveAction != null) {
+                    saveAction.run();
+                }
             });
 
             Button dismissBtn = new Button("Dismiss");
@@ -66,5 +75,10 @@ public class FindingCard extends VBox {
             actions.getChildren().addAll(dismissBtn, copyBtn);
             getChildren().addAll(codeBlock, actions);
         }
+    }
+
+    // <-- new setter
+    public void setSaveAction(Runnable saveAction) {
+        this.saveAction = saveAction;
     }
 }
