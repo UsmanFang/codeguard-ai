@@ -75,13 +75,36 @@ public class SettingsView extends ScrollPane {
         Button draculaPill = new Button("Dracula Theme");
         Button nordPill = new Button("Nord Dark");
         Button primerPill = new Button("Primer Dark");
+        
         List<Button> themePills = List.of(draculaPill, nordPill, primerPill);
 
-        draculaPill.getStyleClass().add("btn-emerald"); // Dracula active by default on launch
+        // PREVIOUSLY: draculaPill was always marked active on launch regardless
+        // of what was actually saved. Now the pill matching the persisted
+        // theme is highlighted.
+        String savedTheme = com.byteanarchists.codeguard.api.ThemePreferenceStore.resolveThemeName();
+        Button initiallyActivePill = switch (savedTheme) {
+            case com.byteanarchists.codeguard.api.ThemePreferenceStore.NORD_DARK -> nordPill;
+            case com.byteanarchists.codeguard.api.ThemePreferenceStore.PRIMER_DARK -> primerPill;
+            default -> draculaPill;
+        };
+        initiallyActivePill.getStyleClass().add("btn-emerald");
 
-        draculaPill.setOnAction(e -> applyTheme(new Dracula().getUserAgentStylesheet(), draculaPill, themePills));
-        nordPill.setOnAction(e -> applyTheme(new NordDark().getUserAgentStylesheet(), nordPill, themePills));
-        primerPill.setOnAction(e -> applyTheme(new PrimerDark().getUserAgentStylesheet(), primerPill, themePills));
+        draculaPill.setOnAction(e -> {
+            applyTheme(new Dracula().getUserAgentStylesheet(), draculaPill, themePills);
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.DRACULA);
+        });
+        nordPill.setOnAction(e -> {
+            applyTheme(new NordDark().getUserAgentStylesheet(), nordPill, themePills);
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.NORD_DARK);
+        });
+        primerPill.setOnAction(e -> {
+            applyTheme(new PrimerDark().getUserAgentStylesheet(), primerPill, themePills);
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.PRIMER_DARK);
+        });
+
 
         pillContainer.getChildren().addAll(draculaPill, nordPill, primerPill);
         appCard.getChildren().addAll(createRowLabel("Interface Color Space Matrix"), pillContainer);
