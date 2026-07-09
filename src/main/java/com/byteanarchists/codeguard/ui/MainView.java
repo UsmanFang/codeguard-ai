@@ -49,7 +49,8 @@ public class MainView extends BorderPane {
         ControlBar workspaceControlToolbar = new ControlBar(
             this::handleFileLoadExecution,
             this::executeSecurityPipelineAnalysis,
-            this::handleSaveFile,       
+            this::handleSaveFile,
+            this::handleSaveAsFile,
             this::handleCloseFile
         );
 
@@ -64,7 +65,7 @@ public class MainView extends BorderPane {
         VBox.setVgrow(splitWorkspaceLayout, javafx.scene.layout.Priority.ALWAYS);
 
         filePickerPlaceholder = new EmptyStateView(this::handleFileLoadExecution);
-        historicAuditLogView = new HistoryView();
+        historicAuditLogView = new HistoryView(this::openFileFromHistory);
         applicationSettingsView = new SettingsView();
 
         navigationRail = new NavRail(this::navigateToSubpanelView);
@@ -144,11 +145,14 @@ public class MainView extends BorderPane {
             }
             // Save to history
             String fileNameForRecord = (currentFile != null) ? currentFile.getName() : "(untitled)";
+            String filePathForRecord = (currentFile != null) ? currentFile.getAbsolutePath() : "";
             ScanRecord record = new ScanRecord(
                 fileNameForRecord,
+                filePathForRecord,
                 result.getFindings().stream().map(Finding::getSeverity).collect(Collectors.toList()),
                 java.time.LocalDateTime.now().toString()  // simple string timestamp
             );
+
             historyService.saveRecord(record);
             historicAuditLogView.refresh();
 
@@ -188,6 +192,39 @@ public class MainView extends BorderPane {
             applicationStatusBar.setInfoText("Saved successfully.");
         } catch (IOException e) {
             applicationStatusBar.setText("Save failed: " + e.getMessage());
+        }
+    }
+
+    private void handleSaveAsFile() {
+        Window owner = this.getScene().getWindow();
+        String suggestedName = (currentFile != null) ? currentFile.getName() : "untitled.java";
+        File destination = fileService.pickSaveLocation(owner, suggestedName);
+        if (destination == null) {
+            return; // user cancelled the dialog
+        }
+        try {
+            fileService.saveFile(destination, splitWorkspaceLayout.getEditorPanel().getCodeContent());
+            currentFile = destination;
+            applicationStatusBar.setInfoText("Saved as " + destination.getName());
+        } catch (IOException e) {
+            applicationStatusBar.setText("Save As failed: " + e.getMessage());
+        }
+    }
+
+    private void openFileFromHistory(String path) {
+        File target = new File(path);
+        if (!target.exists()) {
+            applicationStatusBar.setText("Could not reopen " + target.getName() + " - the file no longer exists at that location.");
+            return;
+        }
+        try {
+            String content = fileService.readFile(target);
+            currentFile = target;
+            splitWorkspaceLayout.getEditorPanel().setCodeContent(content);
+            navigateToSubpanelView("Scanner");
+            applicationStatusBar.transitionToIdle();
+        } catch (IOException e) {
+            applicationStatusBar.setText("Error reopening file: " + e.getMessage());
         }
     }
 }

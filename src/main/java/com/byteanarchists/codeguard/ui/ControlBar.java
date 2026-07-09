@@ -11,7 +11,7 @@ import com.byteanarchists.codeguard.api.ModelPreferenceStore;
 
 public class ControlBar extends HBox {
 
-    public ControlBar(Runnable openAction, Runnable scanAction, Runnable saveAction, Runnable closeAction) {
+    public ControlBar(Runnable openAction, Runnable scanAction, Runnable saveAction, Runnable saveAsAction, Runnable closeAction) {
     // Enforcing core strategic layout cushions requested by the review
     setPadding(new Insets(10, 14, 10, 14));
     setSpacing(10);
@@ -25,8 +25,13 @@ public class ControlBar extends HBox {
 
     Button saveBtn = new Button("Save");
 
+    // "Save As" lets the user pick a new destination file instead of always
+    // overwriting the currently-open one. Plain Save still overwrites in place.
+    Button saveAsBtn = new Button("Save As...");
+
     Button closeBtn = new Button("✕ Close file");
     closeBtn.setStyle("-fx-text-fill: #ff5555; -fx-background-color: transparent;");
+
 
     // Spacer element pushing system indicators to the right edge
     HBox spacer = new HBox();
@@ -41,8 +46,9 @@ public class ControlBar extends HBox {
     openBtn.setOnAction(e -> openAction.run());
     scanBtn.setOnAction(e -> scanAction.run());
     saveBtn.setOnAction(e -> saveAction.run());
+    saveAsBtn.setOnAction(e -> saveAsAction.run());
     closeBtn.setOnAction(e -> closeAction.run());
 
-    getChildren().addAll(openBtn, scanBtn, saveBtn, closeBtn, spacer, engineLabel);
+    getChildren().addAll(openBtn, scanBtn, saveBtn, saveAsBtn, closeBtn, spacer, engineLabel);
 }
 }
