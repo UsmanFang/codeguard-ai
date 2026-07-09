@@ -1,7 +1,7 @@
 // Converts the raw timestamp string stored on a ScanRecord (produced by
 // LocalDateTime.now().toString() in MainView, e.g. "2026-07-09T14:32:07.123")
 // into a human-friendly relative string for the History view, e.g. "2h ago".
-package com.byteanarchists.codeguard.util;
+package main.java.com.byteanarchists.codeguard.util;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

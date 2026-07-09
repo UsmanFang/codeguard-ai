@@ -3,8 +3,7 @@
 // PREVIOUS BUG: SettingsView's theme pills applied the chosen theme live via
 // Application.setUserAgentStylesheet(...), but never saved that choice
 // anywhere - so every relaunch silently reset back to Dracula.
-package main.java.com.byteanarchists.codeguard.api;
-
+package com.byteanarchists.codeguard.api;
 import atlantafx.base.theme.Dracula;
 import atlantafx.base.theme.NordDark;
 import atlantafx.base.theme.PrimerDark;
