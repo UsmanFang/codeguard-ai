@@ -22,11 +22,45 @@ public class FileServiceImpl implements FileService {
             new FileChooser.ExtensionFilter("Java Files", "*.java")
         );
         // You can add more extensions later: *.py, *.js, *.cpp
-        return chooser.showOpenDialog(ownerWindow);
+
+        // Remember last folder: start the dialog in whatever directory the
+        // user opened a file from last time, instead of the OS default.
+        File lastDir = com.byteanarchists.codeguard.io.RecentDirectoryStore.resolveLastDirectory();
+        if (lastDir != null) {
+            chooser.setInitialDirectory(lastDir);
+        }
+
+        File selected = chooser.showOpenDialog(ownerWindow);
+        if (selected != null) {
+            com.byteanarchists.codeguard.io.RecentDirectoryStore.saveLastDirectory(selected);
+        }
+        return selected;
     }
 
     @Override
     public void saveFile(File file, String content) throws IOException {
         Files.writeString(file.toPath(), content);
     }
+
+    @Override
+    public File pickSaveLocation(Window ownerWindow, String suggestedName) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save As");
+        chooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Java Files", "*.java")
+        );
+        chooser.setInitialFileName(suggestedName);
+
+        File lastDir = com.byteanarchists.codeguard.io.RecentDirectoryStore.resolveLastDirectory();
+        if (lastDir != null) {
+            chooser.setInitialDirectory(lastDir);
+        }
+
+        File selected = chooser.showSaveDialog(ownerWindow);
+        if (selected != null) {
+            com.byteanarchists.codeguard.io.RecentDirectoryStore.saveLastDirectory(selected);
+        }
+        return selected;
+    }
+
 }
