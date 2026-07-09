@@ -51,4 +51,6 @@ public class ControlBar extends HBox {
 
     getChildren().addAll(openBtn, scanBtn, saveBtn, saveAsBtn, closeBtn, spacer, engineLabel);
 }
+
+   
 }

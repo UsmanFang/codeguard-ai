@@ -1,6 +1,7 @@
 //screen 5, theme/model/toggle settings
 package com.byteanarchists.codeguard.ui;
 
+import com.byteanarchists.codeguard.util.SettingsStore;
 import atlantafx.base.theme.Dracula;
 import atlantafx.base.theme.NordDark;
 import atlantafx.base.theme.PrimerDark;
@@ -128,7 +129,10 @@ public class SettingsView extends ScrollPane {
         // Section 3: Scanning Flags
         VBox featuresCard = createSettingCard("Runtime Scanner Directives");
         CheckBox patchFlag = new CheckBox("Auto-save after applying a patch repair");
-        patchFlag.setSelected(true);
+            patchFlag.setSelected(SettingsStore.isAutoSaveEnabled());
+            patchFlag.selectedProperty().addListener((obs, oldVal, newVal) -> 
+                SettingsStore.setAutoSaveEnabled(newVal)
+        );
         CheckBox lineHighlightFlag = new CheckBox("Highlight structural vulnerable source frames");
         lineHighlightFlag.setSelected(true);
         featuresCard.getChildren().addAll(patchFlag, lineHighlightFlag);

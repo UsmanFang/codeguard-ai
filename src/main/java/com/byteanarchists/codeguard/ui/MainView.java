@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+import com.byteanarchists.codeguard.util.SettingsStore;
 import com.byteanarchists.codeguard.api.FireworksScannerImpl;
 import com.byteanarchists.codeguard.api.ScannerService;
 import com.byteanarchists.codeguard.api.model.Finding;
@@ -53,6 +54,8 @@ public class MainView extends BorderPane {
             this::handleSaveAsFile,
             this::handleCloseFile
         );
+
+        
 
         interactiveWorkspaceContainer = new VBox();
         interactiveWorkspaceContainer.getChildren().addAll(
@@ -127,40 +130,45 @@ public class MainView extends BorderPane {
 }
 
     private void executeSecurityPipelineAnalysis() {
-        String codeSegment = splitWorkspaceLayout.getEditorPanel().getCodeContent();
-        if (codeSegment.isEmpty()) return;
+            String codeSegment = splitWorkspaceLayout.getEditorPanel().getCodeContent();
+            if (codeSegment.isEmpty()) return;
 
-        applicationStatusBar.transitionToScanning();
+            applicationStatusBar.transitionToScanning();
 
-        scanningEngine.runScanAsync(codeSegment).thenAccept(result -> Platform.runLater(() -> {
-            if (result.isSuccess()) {
-                workspaceStatsSummary.refreshCounts(result.getFindings());
-                splitWorkspaceLayout.getReportPanel().renderFindings(result.getFindings());
-                applicationStatusBar.transitionToSuccess(result.getFindings().size());
-                
-                // Triggers structural source context highlight lines mapping loops
-                result.getFindings().forEach(finding -> 
-                    splitWorkspaceLayout.getEditorPanel().highlightVulnerableLine(finding.getLineNumber())
+            scanningEngine.runScanAsync(codeSegment).thenAccept(result -> Platform.runLater(() -> {
+                if (result.isSuccess()) {
+                    workspaceStatsSummary.refreshCounts(result.getFindings());
+                    splitWorkspaceLayout.getReportPanel().renderFindings(result.getFindings());
+                    applicationStatusBar.transitionToSuccess(result.getFindings().size());
+
+                    // Triggers structural source context highlight lines mapping loops
+                    result.getFindings().forEach(finding ->
+                        splitWorkspaceLayout.getEditorPanel().highlightVulnerableLine(finding.getLineNumber())
+                    );
+
+                    // 🔽 Auto‑save if the setting is enabled
+                    if (SettingsStore.isAutoSaveEnabled()) {
+                        handleSaveFile();
+                    }
+                }
+                // Save to history
+                String fileNameForRecord = (currentFile != null) ? currentFile.getName() : "(untitled)";
+                String filePathForRecord = (currentFile != null) ? currentFile.getAbsolutePath() : "";
+                ScanRecord record = new ScanRecord(
+                    fileNameForRecord,
+                    filePathForRecord,
+                    result.getFindings().stream().map(Finding::getSeverity).collect(Collectors.toList()),
+                    java.time.LocalDateTime.now().toString()
                 );
-            }
-            // Save to history
-            String fileNameForRecord = (currentFile != null) ? currentFile.getName() : "(untitled)";
-            String filePathForRecord = (currentFile != null) ? currentFile.getAbsolutePath() : "";
-            ScanRecord record = new ScanRecord(
-                fileNameForRecord,
-                filePathForRecord,
-                result.getFindings().stream().map(Finding::getSeverity).collect(Collectors.toList()),
-                java.time.LocalDateTime.now().toString()  // simple string timestamp
-            );
 
-            historyService.saveRecord(record);
-            historicAuditLogView.refresh();
+                historyService.saveRecord(record);
+                historicAuditLogView.refresh();
 
-            if (!result.isSuccess()) {
-                applicationStatusBar.setText(result.getErrorMessage());
-            }
-        }));
-    }
+                if (!result.isSuccess()) {
+                    applicationStatusBar.setText(result.getErrorMessage());
+                }
+            }));
+        }
 
     private String getTargetSampleCode() {
         return """
