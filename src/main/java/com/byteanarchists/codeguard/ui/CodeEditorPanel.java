@@ -1,29 +1,47 @@
-// # left panel — editable TextArea (or CodeArea if using
-//  RichTextFX)
 package com.byteanarchists.codeguard.ui;
 
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
+import javafx.beans.property.StringProperty;
 
 public class CodeEditorPanel extends StackPane {
     private final TextArea codeArea;
 
+    // Define Soft-Studio Light Theme
+    private static final String LIGHT_THEME = 
+        "-fx-font-family: 'JetBrains Mono', 'Courier New', monospace; " +
+        "-fx-font-size: 13px; " +
+        "-fx-text-fill: #2D3436; " + 
+        "-fx-control-inner-background: #FFFFFF; " + 
+        "-fx-background-color: #F4F5F7; " +
+        "-fx-border-color: #DFE4EA; " + 
+        "-fx-border-width: 1px;";
+
+    // Define Standard Dracula Dark Theme
+    private static final String DARK_THEME = 
+        "-fx-font-family: 'JetBrains Mono', 'Courier New', monospace; " +
+        "-fx-font-size: 13px; " +
+        "-fx-text-fill: #f8f8f2; " +
+        "-fx-control-inner-background: #282a36; " +
+        "-fx-background-color: transparent; " +
+        "-fx-focus-color: transparent; " +
+        "-fx-text-box-border: transparent;";
+
     public CodeEditorPanel() {
         getStyleClass().add("code-panel");
-
         codeArea = new TextArea();
-        codeArea.setStyle(
-            "-fx-font-family: 'JetBrains Mono', 'Courier New', monospace; " +
-            "-fx-font-size: 13px; " +
-            "-fx-text-fill: #f8f8f2; " +
-            "-fx-control-inner-background: #282a36; " +
-            "-fx-background-color: transparent; " +
-            "-fx-focus-color: transparent; " +
-            "-fx-text-box-border: transparent;"
-        );
+        codeArea.setStyle(DARK_THEME); // Default to dark
         codeArea.setPromptText("// Load target system files to trigger operational checks...");
-
         getChildren().add(codeArea);
+    }
+
+    // Dynamic Theme Toggle
+    public void applyTheme(boolean isLightMode) {
+        codeArea.setStyle(isLightMode ? LIGHT_THEME : DARK_THEME);
+    }
+
+    public StringProperty textProperty() {
+        return codeArea.textProperty();
     }
 
     public void setCodeContent(String text) {
@@ -34,13 +52,10 @@ public class CodeEditorPanel extends StackPane {
         return codeArea.getText();
     }
 
-    /**
-     * Selects the given 1-based line so the user can visually see where a
-     * finding is. TextArea has no per-substring styling API without pulling in
-     * RichTextFX, so selection (which JavaFX renders with a highlight color)
-     * is the simplest real signal - this replaces the old no-op that only
-     * printed to the console and never touched the UI.
-     */
+    public void clearHighlights() {
+        this.getStyleClass().remove("vulnerable-line-highlight");
+    }
+
     public void highlightVulnerableLine(int targetLine) {
         int[] range = lineRange(targetLine);
         if (range == null) return;
@@ -48,12 +63,6 @@ public class CodeEditorPanel extends StackPane {
         codeArea.selectRange(range[0], range[1]);
     }
 
-    /**
-     * Replaces the text of the given 1-based line with the AI-suggested fix
-     * snippet (which may itself span multiple lines). This is what backs the
-     * "Apply Patch" button on a finding card - previously that button existed
-     * in the UI but had no onAction handler at all, so clicking it did nothing.
-     */
     public void applyFixAtLine(int targetLine, String fixSnippet) {
         int[] range = lineRange(targetLine);
         if (range == null) return;
@@ -61,7 +70,6 @@ public class CodeEditorPanel extends StackPane {
         codeArea.replaceSelection(fixSnippet);
     }
 
-    /** Returns {startOffset, endOffset} (exclusive of trailing newline) for a 1-based line, or null if out of range. */
     private int[] lineRange(int targetLine) {
         String text = codeArea.getText();
         String[] lines = text.split("\n", -1);
@@ -69,7 +77,7 @@ public class CodeEditorPanel extends StackPane {
 
         int start = 0;
         for (int i = 0; i < targetLine - 1; i++) {
-            start += lines[i].length() + 1; // +1 for the '\n' we split on
+            start += lines[i].length() + 1;
         }
         int end = start + lines[targetLine - 1].length();
         return new int[]{start, end};

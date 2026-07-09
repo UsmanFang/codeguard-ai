@@ -24,18 +24,32 @@ public class HistoryService {
             List<ScanRecord> parsed = gson.fromJson(json, listType);
             return (parsed != null) ? parsed : new ArrayList<>();
         } catch (IOException | com.google.gson.JsonSyntaxException e) {
-            // Corrupt or unreadable history file - don't crash the app over old scan logs.
             return new ArrayList<>();
         }
     }
 
-    public void saveRecord(ScanRecord record) {
-        List<ScanRecord> list = loadHistory();
-        list.add(record);
+    /**
+     * UPDATED: Now supports batch saving to enable deduplication.
+     * This overwrites the history file with the provided cleaned list.
+     */
+    public void saveAll(List<ScanRecord> records) {
         try {
-            Files.writeString(HISTORY_FILE.toPath(), gson.toJson(list));
+            String json = gson.toJson(records);
+            Files.writeString(HISTORY_FILE.toPath(), json);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Optional: Kept for legacy support, but for the new deduplication
+     * feature, use saveAll(list) in MainView.
+     */
+    public void saveRecord(ScanRecord record) {
+        List<ScanRecord> list = loadHistory();
+        // Remove existing to prevent duplicates, then add
+        list.removeIf(item -> item.getFilename().equalsIgnoreCase(record.getFilename()));
+        list.add(record);
+        saveAll(list);
     }
 }

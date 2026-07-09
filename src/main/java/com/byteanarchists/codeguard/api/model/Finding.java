@@ -1,7 +1,7 @@
 //{ severity, title, description, fixSnippet, line }
 package com.byteanarchists.codeguard.api.model;
-
-public class Finding {
+import java.io.Serializable;
+public class Finding implements Serializable  {
     private final String severity; // CRITICAL, HIGH, INFO
     private final String title;
     private final String description;

@@ -1,4 +1,3 @@
-// "Open File" + "Scan with AI Model" buttons (HBox)
 package com.byteanarchists.codeguard.ui;
 
 import javafx.geometry.Insets;
@@ -11,38 +10,47 @@ import com.byteanarchists.codeguard.api.ModelPreferenceStore;
 
 public class ControlBar extends HBox {
 
+    private final Label engineLabel;
+
     public ControlBar(Runnable openAction, Runnable scanAction, Runnable saveAction, Runnable closeAction) {
-    // Enforcing core strategic layout cushions requested by the review
-    setPadding(new Insets(10, 14, 10, 14));
-    setSpacing(10);
-    setAlignment(Pos.CENTER_LEFT);
-    setStyle("-fx-background-color: #1e1f29; -fx-border-color: #44475a; -fx-border-width: 0 0 1px 0;");
+        // Enforcing core strategic layout cushions requested by the review
+        setPadding(new Insets(10, 14, 10, 14));
+        setSpacing(10);
+        setAlignment(Pos.CENTER_LEFT);
+        setStyle("-fx-background-color: #1e1f29; -fx-border-color: #44475a; -fx-border-width: 0 0 1px 0;");
 
-    Button openBtn = new Button("Open Target File");
+        Button openBtn = new Button("Open Target File");
+        Button saveBtn = new Button("Save");
+        Button closeBtn = new Button("✕ Close file");
+        closeBtn.setStyle("-fx-text-fill: #ff5555; -fx-background-color: transparent;");
 
-    Button scanBtn = new Button("Initiate Security Scan");
-    scanBtn.getStyleClass().add("btn-emerald"); // Explicit functional color mappings
+        // Repositioned, aligned and specifically named CTA Security Trigger
+        Button scanBtn = new Button("Initiate Security Scan");
+        scanBtn.getStyleClass().add("btn-emerald");
 
-    Button saveBtn = new Button("Save");
+        // Spacer element pushing system indicators to the right edge
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-    Button closeBtn = new Button("✕ Close file");
-    closeBtn.setStyle("-fx-text-fill: #ff5555; -fx-background-color: transparent;");
+        // Dynamically backed core configuration target label
+        engineLabel = new Label();
+        engineLabel.setStyle("-fx-font-family: 'JetBrains Mono'; -fx-text-fill: #6272a4; -fx-font-size: 12px;");
+        refreshModelLabel();
 
-    // Spacer element pushing system indicators to the right edge
-    HBox spacer = new HBox();
-    HBox.setHgrow(spacer, Priority.ALWAYS);
+        openBtn.setOnAction(e -> openAction.run());
+        scanBtn.setOnAction(e -> scanAction.run());
+        saveBtn.setOnAction(e -> saveAction.run());
+        closeBtn.setOnAction(e -> closeAction.run());
 
-    // PREVIOUSLY hardcoded to "llama3-70b" regardless of which model was actually
-    // configured/active - now reflects ModelPreferenceStore, same source of truth
-    // FireworksScannerImpl reads from.
-    Label engineLabel = new Label("Fireworks AI [" + ModelPreferenceStore.resolveModelShortName() + "]  ⚙");
-    engineLabel.setStyle("-fx-font-family: 'JetBrains Mono'; -fx-text-fill: #6272a4; -fx-font-size: 12px;");
+        // Assembly order placement preserving design rules
+        getChildren().addAll(openBtn, scanBtn, saveBtn, closeBtn, spacer, engineLabel);
+    }
 
-    openBtn.setOnAction(e -> openAction.run());
-    scanBtn.setOnAction(e -> scanAction.run());
-    saveBtn.setOnAction(e -> saveAction.run());
-    closeBtn.setOnAction(e -> closeAction.run());
-
-    getChildren().addAll(openBtn, scanBtn, saveBtn, closeBtn, spacer, engineLabel);
-}
+    /**
+     * Resolves and updates the current active engine tracking text label immediately.
+     */
+    public final void refreshModelLabel() {
+        String activeModel = ModelPreferenceStore.resolveModelShortName();
+        engineLabel.setText("Fireworks AI [" + activeModel + "]  ⚙");
+    }
 }
