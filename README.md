@@ -1,3 +1,4 @@
+
 # CodeGuard AI Studio 🛡️
 
 CodeGuard AI is an advanced security engineering dashboard featuring a high-performance **JavaFX 21** user interface coupled with the dark modern **AtlantaFX Dracula** design architecture. It delivers real-time vulnerability scanning via the **Fireworks AI** engine running on powerful back-end hardware accelerators.
