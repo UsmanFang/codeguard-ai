@@ -1,6 +1,9 @@
 package com.byteanarchists.codeguard.ui;
 
+import com.byteanarchists.codeguard.util.SettingsStore;
 import atlantafx.base.theme.Dracula;
+import atlantafx.base.theme.NordDark;
+import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
 import com.byteanarchists.codeguard.api.ApiKeyStore;
 import com.byteanarchists.codeguard.api.ModelPreferenceStore;
@@ -15,16 +18,12 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
 import java.util.List;
 
 public class SettingsView extends ScrollPane {
 
-    // Persistent runtime state variables backing placeholder checkboxes
-    private static boolean autoSaveEnabled = true;
-    private static boolean lineHighlightEnabled = true;
-
     public SettingsView() {
-        
         setFitToWidth(true);
         setStyle("-fx-background: #282a36; -fx-background-color: #282a36;");
 
@@ -69,34 +68,51 @@ public class SettingsView extends ScrollPane {
             keyRow
         );
 
-        // Section 1: Appearance Options (Simplified precisely to Dark and Light choices)
+        // Section 1: Appearance Options – includes Dark themes + a Light theme
         VBox appCard = createSettingCard("Appearance");
         HBox pillContainer = new HBox(8);
-        Button darkPill = new Button("Dark Theme");
+        Button draculaPill = new Button("Dracula Theme");
+        Button nordPill = new Button("Nord Dark");
+        Button primerPill = new Button("Primer Dark");
         Button lightPill = new Button("Light Theme");
-        List<Button> themePills = List.of(darkPill, lightPill);
 
-        darkPill.getStyleClass().add("btn-emerald"); // Default visual scope active state
+        List<Button> themePills = List.of(draculaPill, nordPill, primerPill, lightPill);
 
-        darkPill.setOnAction(e -> {
+        String savedTheme = com.byteanarchists.codeguard.api.ThemePreferenceStore.resolveThemeName();
+        Button initiallyActivePill = switch (savedTheme) {
+            case com.byteanarchists.codeguard.api.ThemePreferenceStore.NORD_DARK -> nordPill;
+            case com.byteanarchists.codeguard.api.ThemePreferenceStore.PRIMER_DARK -> primerPill;
+            case "LIGHT" -> lightPill;
+            default -> draculaPill;
+        };
+        initiallyActivePill.getStyleClass().add("btn-emerald");
+
+        draculaPill.setOnAction(e -> {
+            applyPillSelection(draculaPill, themePills);
             Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
-            if (getScene() != null && getScene().getRoot() != null) {
-                getScene().getRoot().getStyleClass().remove("theme-light");
-                getScene().getRoot().getStyleClass().add("theme-dark");
-            }
-            applyPillSelection(darkPill, themePills);
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.DRACULA);
         });
-
+        nordPill.setOnAction(e -> {
+            applyPillSelection(nordPill, themePills);
+            Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.NORD_DARK);
+        });
+        primerPill.setOnAction(e -> {
+            applyPillSelection(primerPill, themePills);
+            Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme(
+                com.byteanarchists.codeguard.api.ThemePreferenceStore.PRIMER_DARK);
+        });
         lightPill.setOnAction(e -> {
-            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
-            if (getScene() != null && getScene().getRoot() != null) {
-                getScene().getRoot().getStyleClass().remove("theme-dark");
-                getScene().getRoot().getStyleClass().add("theme-light");
-            }
             applyPillSelection(lightPill, themePills);
+            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+            // Save a custom "LIGHT" string – ThemePreferenceStore will store it as‑is
+            com.byteanarchists.codeguard.api.ThemePreferenceStore.saveTheme("LIGHT");
         });
 
-        pillContainer.getChildren().addAll(darkPill, lightPill);
+        pillContainer.getChildren().addAll(draculaPill, nordPill, primerPill, lightPill);
         appCard.getChildren().addAll(createRowLabel("Interface Color Space Matrix"), pillContainer);
 
         // Section 2: Model Configuration
@@ -106,25 +122,29 @@ public class SettingsView extends ScrollPane {
         ComboBox<String> models = new ComboBox<>();
         models.getItems().addAll("kimi-k2p7-code", "deepseek-v4-pro");
         models.setValue(ModelPreferenceStore.resolveModelShortName());
-        
+
         Label liveBadge = new Label("CONNECTED");
         liveBadge.setStyle("-fx-background-color: #50fa7b; -fx-text-fill: #282a36; -fx-font-weight: bold; -fx-font-size: 10px; -fx-padding: 2px 6px; -fx-background-radius: 4px;");
-        
+
         models.setOnAction(e -> ModelPreferenceStore.saveModel(models.getValue()));
         connectionRow.getChildren().addAll(models, liveBadge);
         modelCard.getChildren().addAll(createRowLabel("Active Target Remote LLM"), connectionRow);
 
-        // Section 3: Active Runtime Directives (Functional Selection Bindings)
+        // Section 3: Runtime Directives – using SettingsStore for persistence
         VBox featuresCard = createSettingCard("Runtime Scanner Directives");
         CheckBox patchFlag = new CheckBox("Auto-save after applying a patch repair");
-        patchFlag.setSelected(autoSaveEnabled);
-        patchFlag.selectedProperty().addListener((obs, oldVal, newVal) -> autoSaveEnabled = newVal);
+        patchFlag.setSelected(SettingsStore.isAutoSaveEnabled());
+        patchFlag.selectedProperty().addListener((obs, oldVal, newVal) -> 
+            SettingsStore.setAutoSaveEnabled(newVal)
+        );
 
-       // CheckBox lineHighlightFlag = new CheckBox("Highlight structural vulnerable source frames");
-        //lineHighlightFlag.setSelected(lineHighlightEnabled);
-        //lineHighlightFlag.selectedProperty().addListener((obs, oldVal, newVal) -> lineHighlightEnabled = newVal);
+        CheckBox lineHighlightFlag = new CheckBox("Highlight structural vulnerable source frames");
+        lineHighlightFlag.setSelected(SettingsStore.isHighlightEnabled());
+        lineHighlightFlag.selectedProperty().addListener((obs, oldVal, newVal) -> 
+            SettingsStore.setHighlightEnabled(newVal)
+        );
 
-        featuresCard.getChildren().addAll(patchFlag);
+        featuresCard.getChildren().addAll(patchFlag, lineHighlightFlag);
 
         // Section 4: Hackathon Footer
         VBox buildFooter = new VBox(4);
@@ -137,10 +157,6 @@ public class SettingsView extends ScrollPane {
 
         rootBox.getChildren().addAll(apiKeyCard, appCard, modelCard, featuresCard, buildFooter);
     }
-
-
-    public static boolean isAutoSaveEnabled() { return autoSaveEnabled; }
-    public static boolean isLineHighlightEnabled() { return lineHighlightEnabled; }
 
     private String keyStatusStyle(boolean loaded) {
         String bg = loaded ? "#50fa7b" : "#ff5555";

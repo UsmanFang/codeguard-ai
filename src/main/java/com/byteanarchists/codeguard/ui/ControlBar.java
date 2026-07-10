@@ -12,7 +12,7 @@ public class ControlBar extends HBox {
 
     private final Label engineLabel;
 
-    public ControlBar(Runnable openAction, Runnable scanAction, Runnable saveAction, Runnable closeAction) {
+    public ControlBar(Runnable openAction, Runnable scanAction, Runnable saveAction, Runnable saveAsAction, Runnable closeAction) {
         // Enforcing core strategic layout cushions requested by the review
         setPadding(new Insets(10, 14, 10, 14));
         setSpacing(10);
@@ -21,6 +21,7 @@ public class ControlBar extends HBox {
 
         Button openBtn = new Button("Open Target File");
         Button saveBtn = new Button("Save");
+        Button saveAsBtn = new Button("Save As...");
         Button closeBtn = new Button("✕ Close file");
         closeBtn.setStyle("-fx-text-fill: #ff5555; -fx-background-color: transparent;");
 
@@ -40,10 +41,11 @@ public class ControlBar extends HBox {
         openBtn.setOnAction(e -> openAction.run());
         scanBtn.setOnAction(e -> scanAction.run());
         saveBtn.setOnAction(e -> saveAction.run());
+        saveAsBtn.setOnAction(e -> saveAsAction.run());
         closeBtn.setOnAction(e -> closeAction.run());
 
         // Assembly order placement preserving design rules
-        getChildren().addAll(openBtn, scanBtn, saveBtn, closeBtn, spacer, engineLabel);
+        getChildren().addAll(openBtn, scanBtn, saveBtn, saveAsBtn, closeBtn, spacer, engineLabel);
     }
 
     /**

@@ -11,16 +11,23 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
+import javafx.util.Duration; // for FadeTransition
+
+import java.time.LocalDateTime;
+import java.time.Duration; // for getRelativeTime
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class HistoryView extends ScrollPane {
     private final VBox container;
     private final HistoryService historyService;
-    private Consumer<ScanRecord> onRecordSelectedCallback;
+    private final Consumer<String> onOpenFile;          // for reopening files
+    private Consumer<ScanRecord> onRecordSelectedCallback; // optional extra callback
 
-    public HistoryView() {
+    public HistoryView(Consumer<String> onOpenFile) {
+        this.onOpenFile = onOpenFile;
+        this.onRecordSelectedCallback = null;
         historyService = new HistoryService();
 
         setFitToWidth(true);
@@ -38,7 +45,6 @@ public class HistoryView extends ScrollPane {
     }
 
     private void renderLogsContent() {
-        // Completely removed any hardcoded mock indicators or target.java references
         Label viewTitle = new Label("Recent Workplace Audits (Dynamic History Feed)");
         viewTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f8f8f2; -fx-padding: 0 0 10 0;");
         container.getChildren().add(viewTitle);
@@ -51,7 +57,6 @@ public class HistoryView extends ScrollPane {
             container.getChildren().add(emptyLabel);
         } else {
             int staggerOffsetIndex = 0;
-            // Loops programmatically across actual storage records only
             for (ScanRecord record : realHistory) {
                 HBox card = createHistoryCard(record);
                 container.getChildren().add(card);
@@ -65,12 +70,24 @@ public class HistoryView extends ScrollPane {
         card.getStyleClass().add("bordered-card");
         card.setAlignment(Pos.CENTER_LEFT);
 
-        card.setOnMouseClicked(event -> {
-            if (onRecordSelectedCallback != null) {
-                onRecordSelectedCallback.accept(record);
-            }
-        });
-        card.setStyle("-fx-cursor: hand;");
+        // Click handler: open file if path exists, and also invoke optional callback
+        String path = record.getFilePath();
+        if (path != null && !path.isBlank()) {
+            card.setStyle("-fx-cursor: hand;");
+            card.setOnMouseClicked(e -> {
+                onOpenFile.accept(path);
+                if (onRecordSelectedCallback != null) {
+                    onRecordSelectedCallback.accept(record);
+                }
+            });
+        } else {
+            // No file path – still allow the callback if set, but no file reopen
+            card.setOnMouseClicked(e -> {
+                if (onRecordSelectedCallback != null) {
+                    onRecordSelectedCallback.accept(record);
+                }
+            });
+        }
 
         Label logIcon = new Label("📑");
         Label targetName = new Label(record.getFilename());
@@ -91,8 +108,9 @@ public class HistoryView extends ScrollPane {
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label timeLabel = new Label(record.getTimestamp());
-        timeLabel.setStyle("-fx-font-family: 'JetBrains Mono'; -fx-text-fill: #50fa7b; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 0 4 0 0;");
+        // Human‑friendly relative time
+        Label timeLabel = new Label(getRelativeTime(record.getTimestamp()));
+        timeLabel.setStyle("-fx-text-fill: #6272a4; -fx-font-size: 12px;");
 
         card.getChildren().addAll(logIcon, targetName, badgeContainer, spacer, timeLabel);
         return card;
@@ -109,5 +127,25 @@ public class HistoryView extends ScrollPane {
     public void refresh() {
         container.getChildren().clear();
         renderLogsContent();
+    }
+
+    private String getRelativeTime(String timestamp) {
+        try {
+            LocalDateTime past = LocalDateTime.parse(timestamp);
+            LocalDateTime now = LocalDateTime.now();
+            Duration duration = Duration.between(past, now);
+            long seconds = duration.getSeconds();
+            long minutes = seconds / 60;
+            long hours = minutes / 60;
+            long days = hours / 24;
+            if (seconds < 60) return "Just now";
+            if (minutes < 60) return minutes + "m ago";
+            if (hours < 24) return hours + "h ago";
+            if (days < 2) return "Yesterday";
+            if (days < 7) return days + "d ago";
+            return past.format(DateTimeFormatter.ofPattern("MMM d, yyyy"));
+        } catch (Exception e) {
+            return timestamp;
+        }
     }
 }

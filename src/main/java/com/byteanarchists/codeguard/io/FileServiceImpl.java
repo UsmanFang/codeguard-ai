@@ -18,19 +18,30 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public File pickFile(Window ownerWindow) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open Target Code File for Audit");
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Open Target Code File for Audit");
         
         // Match multi-extension targets configured for V2 expansion
-        fileChooser.getExtensionFilters().addAll(
+        chooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("Supported Source Code (*.java, *.py, *.js)", "*.java", "*.py", "*.js"),
             new FileChooser.ExtensionFilter("Java Source Files (*.java)", "*.java"),
             new FileChooser.ExtensionFilter("Python Source Files (*.py)", "*.py"),
             new FileChooser.ExtensionFilter("JavaScript Source Files (*.js)", "*.js"),
             new FileChooser.ExtensionFilter("All Files (*.*)", "*.*")
         );
-        
-        return fileChooser.showOpenDialog(ownerWindow);
+
+        // Remember last folder: start the dialog in whatever directory the
+        // user opened a file from last time, instead of the OS default.
+        File lastDir = com.byteanarchists.codeguard.io.RecentDirectoryStore.resolveLastDirectory();
+        if (lastDir != null) {
+            chooser.setInitialDirectory(lastDir);
+        }
+
+        File selected = chooser.showOpenDialog(ownerWindow);
+        if (selected != null) {
+            com.byteanarchists.codeguard.io.RecentDirectoryStore.saveLastDirectory(selected);
+        }
+        return selected;
     }
 
     @Override
@@ -39,5 +50,26 @@ public class FileServiceImpl implements FileService {
             throw new IOException("Cannot write file output: specified destination path block is empty.");
         }
         Files.writeString(file.toPath(), content);
+    }
+
+    @Override
+    public File pickSaveLocation(Window ownerWindow, String suggestedName) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save As");
+        chooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Java Files", "*.java")
+        );
+        chooser.setInitialFileName(suggestedName);
+
+        File lastDir = com.byteanarchists.codeguard.io.RecentDirectoryStore.resolveLastDirectory();
+        if (lastDir != null) {
+            chooser.setInitialDirectory(lastDir);
+        }
+
+        File selected = chooser.showSaveDialog(ownerWindow);
+        if (selected != null) {
+            com.byteanarchists.codeguard.io.RecentDirectoryStore.saveLastDirectory(selected);
+        }
+        return selected;
     }
 }
