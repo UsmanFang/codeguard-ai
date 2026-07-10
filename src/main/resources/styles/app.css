@@ -1,0 +1,121 @@
+/* Custom Dracula Extensions and Terminal Layout Styling */
+
+.root {
+    -fx-font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ==========================================
+   THEME CORE SETUP & SCOPES
+   ========================================== */
+
+/* Dark Theme Tokens (Dracula Base) */
+.theme-dark {
+    -fx-background-color: #282a36;
+    -fx-border-color: #44475a;
+    -fx-text-fill: #f8f8f2;
+}
+
+/* High-Contrast Professional Light Mode (Windows-Native Aesthetic) */
+.theme-light {
+    -fx-background-color: #f3f3f3; 
+    -fx-border-color: #cccccc;
+    -fx-text-fill: #000000;
+}
+
+/* Force high-contrast text for accessibility in light mode */
+.theme-light .label, 
+.theme-light .text-area, 
+.theme-light .text-field {
+    -fx-text-fill: #000000 !important;
+}
+
+.theme-light .text-area, 
+.theme-light .text-field {
+    -fx-control-inner-background: #ffffff !important;
+    -fx-prompt-text-fill: #666666 !important;
+}
+
+/* ==========================================
+   MONOSPACED PANELS & WORKSPACES
+   ========================================== */
+
+.code-panel, .report-panel {
+    -fx-font-family: 'JetBrains Mono', 'Courier New', monospace;
+    -fx-background-color: #282a36;
+    -fx-border-color: #44475a;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 10px;
+    -fx-text-fill: #f8f8f2;
+}
+
+.theme-light .code-panel, 
+.theme-light .report-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #808080; /* Sharp, high-contrast borders */
+    -fx-text-fill: #000000 !important;
+}
+
+/* ==========================================
+   UI LIST CARDS & HISTORY
+   ========================================== */
+
+.bordered-card {
+    -fx-border-color: #44475a;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-color: #343746;
+    -fx-padding: 12px;
+}
+
+.theme-light .bordered-card {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #a6a6a6;
+    -fx-effect: none; /* Flat design for professional clarity */
+}
+
+/* ==========================================
+   BUTTONS & ACTIONS
+   ========================================== */
+
+.btn-emerald {
+    -fx-background-color: #50fa7b;
+    -fx-text-fill: #282a36;
+    -fx-font-weight: bold;
+}
+
+.theme-light .btn-emerald {
+    -fx-background-color: #2ecc71;
+    -fx-text-fill: #ffffff;
+}
+
+.nav-rail-active {
+    -fx-background-color: #50fa7b !important;
+    -fx-text-fill: #282a36 !important;
+}
+
+/* ==========================================
+   STATUS & ANIMATIONS
+   ========================================== */
+
+.status-idle { -fx-background-color: #44475a; -fx-text-fill: #f8f8f2; }
+.status-scanning { -fx-background-color: #ffb86c; -fx-text-fill: #282a36; -fx-font-weight: bold; }
+.status-success { -fx-background-color: #50fa7b; -fx-text-fill: #282a36; -fx-font-weight: bold; }
+
+.skeleton-loader {
+    -fx-background-color: linear-gradient(to right, #343746 8%, #44475a 18%, #343746 33%);
+    -fx-background-size: 800px 104px;
+    -fx-animation-name: skeleton-glow;
+    -fx-animation-duration: 1.5s;
+    -fx-animation-iteration-count: infinite;
+}
+
+@keyframes skeleton-glow {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+}
+
+.vulnerable-line-highlight {
+    -fx-background-color: rgba(255, 85, 85, 0.25);
+}
