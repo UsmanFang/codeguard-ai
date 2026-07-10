@@ -1,6 +1,13 @@
 @echo off
 echo ===================================================
-echo   Launching CodeGuard AI Studio - Hackathon Walkthrough
+echo          Launching CodeGuard AI Studio
+echo ===================================================
+echo               Team ByteAnarchists
+echo ===================================================
+echo ___________________________________________________
+echo             o   Mohammad Ali Mughal
+echo             o   Muhammad Saim
+echo             o   Muhammad Usman
 echo ===================================================
 
 :: Kill old instances (prevents stacking)
