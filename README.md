@@ -5,7 +5,7 @@ CodeGuard AI is an advanced security engineering dashboard featuring a high-perf
 
 ## Quick-Start Setup
 
-Follow these steps to compile, package, and launch the CodeGuard AI Studio project model:
+Follow these steps to compile , package, and launch the CodeGuard AI Studio project model:
 
 ### 1. Verification Checklist Prerequisites
 Ensure that you have your system configuration mapped out cleanly:
