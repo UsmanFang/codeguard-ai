@@ -3,6 +3,9 @@ target/
 *.class
 *.log
 
+# Packaged standalone app output (built locally, not source)
+CodeGuardAI/
+
 # Sensitive Identity Signature Strings Configuration Storage File Toggles
 .env
 .env.local
